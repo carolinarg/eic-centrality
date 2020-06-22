@@ -59,7 +59,9 @@
 using namespace std;
 using namespace erhic;
 
-void runEICTree(const TString filename="/Users/carorg/projects/Analysis_BeAGLE/rootFiles/eXe_490GeV_fixed_target_40k", const int nEvents = 40000){
+
+
+void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centrality/root_files/root-files-2020/eXe_490GeV_fixed_target_40k", const int nEvents = 40000){
 
 	TChain *tree = new TChain("EICTree");
 	tree->Add( filename+".root" );
@@ -67,7 +69,7 @@ void runEICTree(const TString filename="/Users/carorg/projects/Analysis_BeAGLE/r
 	EventBeagle* event(NULL);
 	tree->SetBranchAddress("event", &event);
 	
-	TFile *out = new TFile ("rootFiles/Analysis_ratio_eXe_490GeV_fixed_target_40k_TEST.root", "RECREATE");
+	TFile *out = new TFile ("/Users/carorg/projects/eic/eic-centrality/root_files/analysis-ratios/Analysis_ratio_eXe_490GeV_fixed_target_40k_TEST.root", "RECREATE");
 	//####################  Creating Histograms ####################################
 
 	TH1F *h_nTracks = new TH1F("h_nTracks", "h_nTracks", 400, 0, 400);
@@ -78,7 +80,7 @@ void runEICTree(const TString filename="/Users/carorg/projects/Analysis_BeAGLE/r
 	TH1F *h_pt = new TH1F("h_pt","h_pt", 100,0, 2);
 	TH1F *h_eta = new TH1F("h_eta", "h_eta", 100, -10, 10);
 	TH1F *h_phi = new TH1F("h_phi", "h_phi", 100,-10, 10);
-	TH1F *h_rapidity = new TH1F("h_rapidity","h_rapidity", 100, -7, 7);
+	TH1F *h_rapidity = new TH1F("h_rapidity","h_rapidity", 100, -7, 3);
 	TH1F *h_mass = new TH1F("h_mass", "h_mass", 100, 0, 10);
 	TH1F *h_b = new TH1F("h_b", "h_b", 100, 0, 10);
 	TH1F *h_trueQ2 = new TH1F("h_trueQ2", "h_trueQ2", 100, 0, 20);
@@ -88,30 +90,33 @@ void runEICTree(const TString filename="/Users/carorg/projects/Analysis_BeAGLE/r
 	TH1F *h_pt_neutron = new TH1F("h_pt_neutron", "h_pt_neutron", 100, 0, 2);
 	TH1F *h_Energy_proton = new TH1F("h_Energy_proton", "h_Energy_proton", 100, 0, 3);
 	TH1F *h_Energy_proton_gt = new TH1F("h_Energy_proton_gt", "h_Energy_proton_gt", 100, 0, 3);
-	TH1F *h_nTracks_proton = new TH1F("h_nTracks_proton", "h_nTracks_proton", 100, 0, 10);
+	
 	TH1F *h_pt_proton = new TH1F("h_pt_proton", "h_pt_proton", 100, 0, 2);
 	TH1F *h_pt_proton_gt= new TH1F("h_pt_proton", "h_pt_proton", 100, 0, 2);
 	TH1F *h_nTracks_gt = new TH1F("h_nTracks_gt","h_nTracks_gt",100, 0, 50);
 	TH1F *h_pt_gt = new TH1F("h_pt_gt", "h_pt_gt", 100, 0, 1);
 	TH1F *h_Energy_gt = new TH1F("h_Energy_gt", "h_Energy_gt", 100,0, 6);
 	TH1F *h_rapidity_gt = new TH1F("h_rapidity_gt","h_rapidity_gt",100,-10,10);
-	TH1F *h_nTracks_p_gt= new TH1F("h_nTracks_p_gt","h_nTracks_p_gt", 100, 0, 10);
-	TH1F *h_Q2_p= new TH1F("h_Q2_p","h_Q2_p", 100, 0, 50);
-	TH1F *h_Q2_p_gt = new TH1F("h_Q2_p_gt", "h_Q2_p_gt", 100, 0, 50);
+	TH1F *h_nTracks_p_gt= new TH1F("h_nTracks_p_gt","h_nTracks_p_gt", 11, -0.5, 10.5); //****
+	TH1F *h_nTracks_proton = new TH1F("h_nTracks_proton", "h_nTracks_proton", 11, -0.5, 10.5); //****
+	
+	
 	TH1F *h_w2 = new TH1F("h_W2","h_W2", 100, 0, 1000);
-	TH1F *h_nu = new TH1F("h_nu", "h_nu",100,0,1000);
+	TH1F *h_nu = new TH1F("h_nu", "h_nu",100,50,400);
 	TH1F *h_bx = new TH1F("h_bx","h_bx",100,0,1);
 
 	TH2F *h_rap_eta = new TH2F("h_rap_eta","h_rap_eta", 100, 0, 1, 100, 0, 1);
 	TH2F *h_mass_mom = new TH2F("h_mass_mom","h_mass_mom", 100, 0, 50, 100, 0, 2);
 	TH2F *h_mass_pt = new TH2F("h_mass_pt","h_mass_pt", 100, 0, 6, 100, 0, 2);
 
+	TH2F *h_rap_gap = new TH2F("h_rap_gap","rapidity gaps",100,-7,3,11,-0.5,10.5);
+
 	TH1F *h_mom = new TH1F("h_momn", "h_mom", 100, 0, 50);
 	
 	int counter_total_particles = 0;
 	int counter_event = 0;
 	//int counter_neu = 0;
-	string title_collision = "e - Xe";
+	string title_collision = "e - D";
 
 	for(int i(0); i < nEvents; ++i ) {
       
@@ -156,7 +161,7 @@ void runEICTree(const TString filename="/Users/carorg/projects/Analysis_BeAGLE/r
 		if( trueQ2 < 1 ) continue;
 		if( trueX < 0.002 ) continue;
 		if( trueNu < 50 || trueNu > 400 )continue;
-		if( trueW2 < 16) continue;
+		if( trueW2 < 16 || trueW2 > 900) continue;
 		//if( trueQ2 < 1. || trueQ2 > 20. ) continue;
 		//if( trueY > 0.95 || trueY < 0.1 ) continue;
 
@@ -193,9 +198,9 @@ void runEICTree(const TString filename="/Users/carorg/projects/Analysis_BeAGLE/r
 			//do analysis track-by-track
 			
 			//particle cuts
-			if (status != 1) continue;
+			if (status != 1) continue; //final state particles
 			//if (pt < 0.8) continue;
-			if (pt > 0.2 && pt < 0.8)
+			if (pt > 0.2 && pt < 0.8) //Grey Tracks
 			{
 				gt_counter++;
 				h_pt_gt->Fill(pt);
@@ -206,6 +211,9 @@ void runEICTree(const TString filename="/Users/carorg/projects/Analysis_BeAGLE/r
 					h_Energy_proton_gt->Fill(Energy);
 					h_pt_proton_gt->Fill(pt);
 					h_rapidity_gt->Fill(rap);
+
+
+					
 				}
 			}	
 			//Particles without the Pt Cut
@@ -258,6 +266,7 @@ void runEICTree(const TString filename="/Users/carorg/projects/Analysis_BeAGLE/r
 			h_rap_eta->Fill(rap,eta,1);
 			h_mass_mom->Fill(mom,mass,1);
 			h_mass_pt->Fill(pt,mass,1);
+			h_rap_gap->Fill(counter_p_gt,rap);
 
 		} // end of particle loop
 	
@@ -271,7 +280,8 @@ void runEICTree(const TString filename="/Users/carorg/projects/Analysis_BeAGLE/r
 		h_nTracks_proton->Fill(counter_p);//all tracks protons
 		h_nTracks_gt->Fill(gt_counter);
 		h_nTracks_p_gt->Fill(counter_p_gt);//grey tracks protons
-		h_Q2_p->Fill(trueQ2);
+		
+		
 		h_w2->Fill(trueW2);
 		h_nu->Fill(trueNu);
 		h_bx->Fill(trueX);
@@ -281,142 +291,118 @@ void runEICTree(const TString filename="/Users/carorg/projects/Analysis_BeAGLE/r
 	
 	//################################### Drawing for e - Xe #############################
 	TCanvas *t15 = new TCanvas("t15","t15");
-	t15->cd();
+	t15->Divide(2,1);
+	t15->cd(1);
 	gPad->SetLogy();
-	h_nTracks_p_gt->SetTitle((title_collision+ " Log Scale  nTracks  pdg:2212 ; Grey Tracks ; nEvents").c_str());
-	h_nTracks_p_gt->Draw();
+	h_nTracks_p_gt->SetTitle((title_collision+ "Grey Tracks Protons ; Grey Tracks ; nEvents").c_str());
+	h_nTracks_p_gt->SetMarkerStyle(kStar);
+	h_nTracks_p_gt->SetMarkerColor(kRed);
+	h_nTracks_p_gt->Draw("P");
 	
-	TCanvas *t23 = new TCanvas("t23","t23");
-	t23->cd();
+	t15->cd(2);
 	gPad->SetLogy();
-	h_nTracks_proton->SetTitle((title_collision+ " Log Scale nTracks pdg:2212 ; nTracks; nEvents").c_str());
-	h_nTracks_proton->Draw();
+	h_nTracks_proton->SetTitle((title_collision+ " NTracks Protons ; nTracks; nEvents").c_str());
+	h_nTracks_proton->SetMarkerStyle(kStar);
+	h_nTracks_proton->SetMarkerColor(kRed);
+	h_nTracks_proton->Draw("P");
 
-	out->Write();
-
-	return;
 	
-	TCanvas *t = new TCanvas("t","t");
-	t->cd();
-	h_pdg->SetTitle((title_collision+ " PDG All particles; PDG;nParticles").c_str());
-	h_pdg->Draw();
 	
-	TCanvas *t10 = new TCanvas("t10","t10");
-	t10->cd();
-	h_nTracks_cuts->SetTitle((title_collision+ " nTracks All particles  ; nTracks ; nEvents").c_str());
-	h_nTracks_cuts->Draw();
 
 	TCanvas *t14 = new TCanvas("t14","t14");
 	t14->cd();
-	h_Energy_proton->SetTitle((title_collision+ " Energy pdg:2212 ; E(GeV) ; nParticles").c_str());
+	h_Energy_proton->SetTitle((title_collision+ " Energy All Protons ; E(GeV) ; nParticles").c_str());
 	h_Energy_proton->Draw();
 				    
 
 	TCanvas *t28 = new TCanvas("t28","t28");
 	t28->cd();
-	h_Energy_proton_gt->SetTitle((title_collision+ " Energy Gt pdg:2212  ; E(GeV) ; nParticles").c_str());
+	h_Energy_proton_gt->SetTitle((title_collision+ " Energy Grey Tracks Protons  ; E(GeV) ; nParticles").c_str());
 	h_Energy_proton_gt->Draw();
-
 	
-	TCanvas *t5 = new TCanvas("t5","t5");
-	t5->cd();
-	h_rapidity->SetTitle((title_collision+ " Rapidity All stable and final particles; Rapidity ;nParticles").c_str());	
-	h_rapidity->Draw();
 	
-	TCanvas *t27 = new TCanvas("t27","t27");
-	t27->cd();
-	h_bx->SetTitle((title_collision+ " Bj x; x; nEvents").c_str());
-	h_bx->Draw();
 	
-	TCanvas *t26 = new TCanvas("t26","t26");
-	t26->cd();
-	h_nu->SetTitle((title_collision+ " Nu ; Nu; nEvents").c_str());
-	h_nu->Draw();
-	
-	TCanvas *t24 = new TCanvas("t24", "t24");
-	t24->cd();
-	h_Q2_p->SetTitle((title_collision+ " Q^2; Q^2; nEvents").c_str());
-	h_Q2_p->Draw();
-	
-	TCanvas *t25 =new TCanvas("t25","t25");
-	t25->cd();
-	h_w2->SetTitle((title_collision+ " W^2 ; w^2; nEvents").c_str());
-	h_w2->Draw();
-   
+	  
 	TCanvas *t22 = new TCanvas("t22","t22");
 	t22->cd();
-	h_rapidity_gt->SetTitle((title_collision+ " Rapidity Grey Tracks; Grey Tracks; nParticles").c_str());
+	h_rapidity_gt->SetTitle((title_collision+ " Rapidity Grey Tracks Protons; Grey Tracks; nParticles").c_str());
 	h_rapidity_gt->Draw();
 		
 	//TCanvas *t21 = new TCanvas("t21","t21");
 	//t21->cd();
-	//h_nTracks_gt->SetTitle((title_collision+ " All stable grey tracks;Grey Tracks; nEvents").c_str());
+	//h_nTracks_gt->SetTitle((title_collision+ " All stable Grey Tracks;Grey Tracks; nEvents").c_str());
 	//h_nTracks_gt->Draw();
 
-	//TCanvas *t14 = new TCanvas("t14","t14");
-	//t14->cd();
-	//h_Energy_proton->SetTitle((title_collision+ " Energy pdg:2212 ; E(GeV) ; nParticles").c_str());
-	//h_Energy_proton->Draw();
-	//t14->SaveAs("plots/Energy_proton.png");
-
-	//TCanvas *t15 = new TCanvas("t15","t15");
-	//t15->cd();
-	//gPad->SetLogy();
-	//h_nTracks_p_gt->SetTitle((title_collision+ " nTracks  pdg:2212 ; Grey Tracks ; nEvents").c_str());
-	//h_nTracks_p_gt->Draw();
-	//t15->SaveAs("plots/nTracks_proton.png");
 	
-	
-	//TCanvas *t23 = new TCanvas("t23","t23");
-	//t23->cd();
-	//h_nTracks_proton->SetTitle((title_collision+ " nTracks pdg:2212 ; nTracks; nEvents").c_str());
-	//h_nTracks_proton->Draw();
 	
 	TCanvas *t16 = new TCanvas("t16","t16");
 	t16->cd();
-	h_pt_proton->SetTitle((title_collision+ " Pt  pdg:2212 ; Pt ; nParticles").c_str());
+	h_pt_proton->SetTitle((title_collision+ " Pt Protons ; Pt ; nParticles").c_str());
 	h_pt_proton->Draw();
 	
 	TCanvas *t29 = new TCanvas("t29","t29");
 	t29->cd();
-	h_pt_proton_gt->SetTitle((title_collision+ " Pt Gt pdg:2212 ; Pt ; nParticles").c_str());
+	h_pt_proton_gt->SetTitle((title_collision+ " Pt Grey Tracks Protons ; Pt ; nParticles").c_str());
 	h_pt_proton_gt->Draw();
-	
-	out->Write();
-	
-	return;
 
+
+	TCanvas *c1 = new TCanvas("c1","c1");
+	c1->cd();
+	h_rap_gap->SetTitle((title_collision+ " Grey Tracks Protons vs Rapidity ; y ; Grey Tracks").c_str());
+	h_rap_gap->SetMarkerStyle(kFullCircle);
+	h_rap_gap->Draw("P");
 	
+	
+	//-------------------------------------- All stable Particles ----------------------------------------------
+
+	TCanvas *t5 = new TCanvas("t5","t5");
+	t5->cd();
+	h_rapidity->SetTitle((title_collision+ " Rapidity All stable and final particles; Rapidity ;nParticles").c_str());	
+	h_rapidity->Draw();
+
+	TCanvas *t26 = new TCanvas("t26","t26");
+	t26->cd();
+	h_nu->SetTitle((title_collision+ " Nu All Particles ; Nu; nEvents").c_str());
+	h_nu->Draw();
+
+	out->Write();
+
+	return;
+	
+
+	TCanvas *t10 = new TCanvas("t10","t10");
+	t10->cd();
+	h_nTracks_cuts->SetTitle((title_collision+ " nTracks All particles  ; nTracks ; nEvents").c_str());
+	h_nTracks_cuts->Draw();
+
+	TCanvas *t = new TCanvas("t","t");
+	t->cd();
+	h_pdg->SetTitle((title_collision+ " PDG All particles; PDG;nParticles").c_str());
+	h_pdg->Draw();
+
 	
 	TCanvas *t17 = new TCanvas("t17","t17");
 	t17->cd();
-	h_rap_eta->SetTitle((title_collision+ " All stable particles; rapidity; eta").c_str());
+	h_rap_eta->SetTitle((title_collision+ " All stable particles Rapidity vs Eta; rapidity; eta").c_str());
 	h_rap_eta->Draw();
 	
-	TCanvas *t18 = new TCanvas("t18","t18");
-	t18->cd();
-	h_mass_mom->SetTitle((title_collision+ " All stable particles; p; M").c_str());
-	h_mass_mom->Draw();
+	// TCanvas *t18 = new TCanvas("t18","t18");
+	// t18->cd();
+	// h_mass_mom->SetTitle((title_collision+ " All stable particles; p; M").c_str());
+	// h_mass_mom->Draw();
 	
 
 	TCanvas *t19 = new TCanvas("t19","t19");
 	t19->cd();
-	h_mom->SetTitle((title_collision+ " All stable particles; p(GeV); nParticles").c_str());
+	h_mom->SetTitle((title_collision+ " All stable particles P; p(GeV); nParticles").c_str());
 	h_mom->Draw();
 
 	TCanvas *t20 = new TCanvas("t20","t20");
 	t20->cd();
-	h_mass_pt->SetTitle((title_collision+ " All stable particles; Pt(GeV); nParticles").c_str());
+	h_mass_pt->SetTitle((title_collision+ " All stable particles M vs Pt; Pt(GeV); Mass").c_str());
 	h_mass_pt->Draw();
-
 		
 	
-	//TCanvas *t = new TCanvas("t","t");
-	//t->cd();
-	//h_pdg->SetTitle((title_collision+ " PDG All particles; PDG;nParticles").c_str());
-	//h_pdg->Draw();
-	//t->SaveAs("plots/PDG_Charged_Particles.png");
-
 	TCanvas *t1 = new TCanvas("t1","t1");
     t1->cd();
 	h_Energy->SetMarkerStyle(kFullCircle);
@@ -443,9 +429,7 @@ void runEICTree(const TString filename="/Users/carorg/projects/Analysis_BeAGLE/r
 	h_phi->SetTitle((title_collision+ " Phi All  particles; Phi ;nParticles").c_str());
 	h_phi->Draw();
 	//t4->SaveAs("plots/Phi_charged_part.png");
-
 	
-	//return;
 
 	TCanvas *t6 = new TCanvas("t6","t6");
 	t6->cd();
@@ -455,7 +439,7 @@ void runEICTree(const TString filename="/Users/carorg/projects/Analysis_BeAGLE/r
   	
 	TCanvas *t7 = new TCanvas("t7","t7");
 	t7->cd();
-	h_nTracks->SetTitle((title_collision+ " nTracks All particles; nTracks;nEvents").c_str());
+	h_nTracks->SetTitle((title_collision+ " nTracks All particles counter; nTracks;nEvents").c_str());
 	h_nTracks->Draw();
 	//t7->SaveAs("plots/nTracks_charged_part.png");
 
@@ -467,52 +451,44 @@ void runEICTree(const TString filename="/Users/carorg/projects/Analysis_BeAGLE/r
 
 	TCanvas *t9 = new TCanvas("t9","t9");
 	t9->cd();
-	h_trueQ2->SetTitle((title_collision+ " Q^2 ; Q^2 ; nEvents").c_str());
+	h_trueQ2->SetTitle((title_collision+ " Q^2 All  ; Q^2 ; nEvents").c_str());
     h_trueQ2->Draw();
 	//t9->SaveAs("plots/q2.png");
 
-	//TCanvas *t10 = new TCanvas("t10","t10");
-	//t10->cd();
-	//h_nTracks_cuts->SetTitle((title_collision+ " nTracks All particles  ; nTracks ; nEvents").c_str());
-	//h_nTracks_cuts->Draw();
-	//t10->SaveAs("plots/nTracks_hadrons.png");
+	TCanvas *t27 = new TCanvas("t27","t27");
+	t27->cd();
+	h_bx->SetTitle((title_collision+ " Bj x; x; nEvents").c_str());
+	h_bx->Draw();
+	
+	
+	
+
+	
+	TCanvas *t25 =new TCanvas("t25","t25");
+	t25->cd();
+	h_w2->SetTitle((title_collision+ " W^2 All; w^2; nEvents").c_str());
+	h_w2->Draw();
+	//-------------------------------------------- Neutrons ----------------------------------------------
 	
 	TCanvas *t11 = new TCanvas("t11","t11");
 	t11->cd();
-	h_Energy_neutron->SetTitle((title_collision+ " Energy pdg:2112 ; E(GeV) ; nParticles").c_str());
+	h_Energy_neutron->SetTitle((title_collision+ " Energy Neutrons ; E(GeV) ; nParticles").c_str());
 	h_Energy_neutron->Draw();
 	//t11->SaveAs("plots/Energy_neutron.png");
 
 	TCanvas *t12 = new TCanvas("t12","t12");
 	t12->cd();
-	h_nTracks_neutron->SetTitle((title_collision+ " nTracks  pdg:2112 ; nTracks ; nEvents").c_str());
+	h_nTracks_neutron->SetTitle((title_collision+ " nTracks Neutrons ; nTracks ; nEvents").c_str());
 	h_nTracks_neutron->Draw();
 	//t12->SaveAs("plots/nTracks_neutron.png");
 
 	TCanvas *t13 = new TCanvas("t13","t13");
 	t13->cd();
-	h_pt_neutron->SetTitle((title_collision+ " Pt  pdg:2112 ; Pt ; nParticles").c_str());
+	h_pt_neutron->SetTitle((title_collision+ " Pt Neutrons ; Pt ; nParticles").c_str());
 	h_pt_neutron->Draw();
-	//t13->SaveAs("plots/Pt_neutron.png");
-	
-	///
-	///TCanvas *t14 = new TCanvas("t14","t14");
-    ///t14->cd();
-	///h_Energy_proton->SetTitle((title_collision+"Energy pdg:2212 ; E(GeV) ; nParticles").c_str());
-	///h_Energy_proton->Draw();
-	/////t14->SaveAs("plots/Energy_proton.png");
+	//t13->SaveAs("plots/Pt_neutron.png");	
 
-	///TCanvas *t15 = new TCanvas("t15","t15");
-	///t15->cd();
-	///h_nTracks_proton->SetTitle((title_collision+" nTracks  pdg:2212 ; nTracks ; nEvents").c_str());
-	///h_nTracks_proton->Draw();
-	//t15->SaveAs("plots/nTracks_proton.png");
-
-	///TCanvas *t16 = new TCanvas("t16","t16");
-	///t16->cd();
-	///h_pt_proton->SetTitle((title_collision+" Pt  pdg:2212 ; Pt ; nParticles").c_str());
-	///h_pt_proton->Draw();
 	
-	// out->Write();
+	//out->Write();
 
 }
