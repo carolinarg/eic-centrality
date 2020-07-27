@@ -78,12 +78,15 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 	TFile *out = new TFile ("/Users/carorg/projects/eic/eic-centrality/root_files/analysis-ratios/Analysis_ratio_eXe_490GeV_fixed_target_40k_TEST.root", "RECREATE");
 	//####################  Creating Histograms ####################################
 
+	//TTree *t = new TTree("t","t filter");
+	
 	TH1F *h_nTracks = new TH1F("h_nTracks", "h_nTracks", 100, 90, 300);
 	TH1F *h_pdg = new TH1F("h_pdg", "h_pdg", 500,-2500, 2500);
 	TH1F *h_Energy = new TH1F("h_Energy", "h_Energy", 100, 0,6);
 	TH1F *h_dE_dN = new TH1F("h_idE_dN", "h_dE_dN", 100, 0, 200);
 	TH1F *h_Status = new TH1F("h_Status", "h_Status", 50, 0, 25);
 	TH1F *h_pt = new TH1F("h_pt","h_pt", 100,0, 2);
+	TH1F *h_pz = new TH1F("h_pz","h_pz", 100,-100, 100);
 	TH1F *h_eta = new TH1F("h_eta", "h_eta", 100, -10, 10);
 	TH1F *h_phi = new TH1F("h_phi", "h_phi", 100,-10, 10);
 	TH1F *h_rapidity = new TH1F("h_rapidity","h_rapidity", 100, -8, 4);
@@ -124,14 +127,15 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 
 	TH2F *h_rap_gap = new TH2F("h_rap_gap","rapidity gaps",100,-7,3,11,-0.5,10.5);
 
-	TH1F *h_mom = new TH1F("h_mom", "h_mom", 100, 0, 500);
-	TH1F *h_Energy_cms = new TH1F("h_Energy_cms","h_Energy_cms",35,0,35);
-	TH1F *h_p_cms = new TH1F("h_p_cms","h_p_cms",20,0,20);
-	TH1F *h_p_long_cms = new TH1F("h_p_long_cms","h_p_long_cms", 20,0,20);
-	TH1F *h_x_f_cms = new TH1F("h_x_f_cms","h_x_f_cms", 20, -4,4);
+	TH1F *h_mom = new TH1F("h_mom", "h_mom", 60, 0, 30);
+	
+	
 	TH1F *h_theta = new TH1F("h_theta","h_theta",100,0,360);
-	TH1F *h_y_cms = new TH1F("h_y_cms","h_y_cms", 100,-8,4);
-	TH1F *h__y_cms = new TH1F("h__y_cms","h__y_cms", 100,-8,4);
+
+	TH1F *h_p_cms = new TH1F("h_p_cms", "h_p_cms", 60,0,30);
+	TH1F * h_Energy_cms = new TH1F("h_Energy_cms","h_Energy_cms", 100,0,6);
+	TH1F *h_pz_cms = new TH1F("h_pz_cms","h_pz_cms",100, -100,100);
+	TH1F *h_pt_cms = new TH1F("h_pt_cms","h_pt_cms",100, 0,2);
 
 
 	
@@ -142,6 +146,14 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 	int counter_event = 0;
 	//int counter_neu = 0;
 	string title_collision = "e - Xe";
+
+	TLorentzVector e_scattered;
+	TLorentzVector e_beam;
+	TLorentzVector p_gamma;
+	TLorentzVector p_final;
+	TLorentzVector p_beam;
+
+	double rap_cms;
 
 	for(int i(0); i < nEvents; ++i ) {
       
@@ -155,11 +167,7 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 		double MASS_NUCLEON = MASS_PROTON;
 		if( struck_nucleon==2112 ) MASS_NUCLEON = MASS_NEUTRON;
 
-			
-		//TLorentzVector e_scattered(0.,0.,0.,0.); //final electron
-
-		
-		
+				
 
 		//event information:
 		double trueQ2 = event->GetTrueQ2();
@@ -172,9 +180,7 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 		double u_hat = event->GetHardU();
 		double photon_flux = event->GetPhotonFlux();
 		int event_process = event->GetProcess();
-		int nParticles = event->GetNTracks();
-
-		
+		int nParticles = event->GetNTracks();		
 
 		double impact_parameter = event->b;
 		double Tb = event->Thickness;
@@ -208,28 +214,41 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 		int counter_mesons_gt = 0;
 		int counter_charged_particles = 0;
 		int counter_charged_particles_gt = 0;
+		int counter_final_e = 0;
 		double rap_gt = 0;
-		double Energy_cms = 0;
-		double p_cms = 0;
-		double x_f_cms = 0;
-		double p_long_cms = 0;
-		double beta_target_cms = 0.9980;
-		double y_cms = 0;
-		double y_cms_target = 0;
-		double _y_cms = 0;
 
+		double e_beam_x = 0;
+		double e_beam_y = 0;
+		double e_beam_z = 0;
+		double e_beam_E = 0;
 
 		double e_scattered_x = 0;
 		double e_scattered_y = 0;
 		double e_scattered_z = 0;
 		double e_scattered_E = 0;
 
-		double p_gamma = 0;
+		//double p_gamma = 0;
 		double p_gamma_x = 0;
 		double p_gamma_y = 0;
 		double p_gamma_z = 0;
 		double p_gamma_E = 0;
+				
+		double pt_cms = 0;
+		double pt_lab = 0;
 
+		TVector3 ux;
+		TVector3 uz;
+
+		e_beam.SetPxPyPzE(0.,0.,pzlep,sqrt(pzlep*pzlep+MASS_ELECTRON*MASS_ELECTRON)); //initial electron
+		p_beam.SetPxPyPzE(0.,0.,pztarg,sqrt(pztarg*pztarg+MASS_NUCLEON*MASS_NUCLEON)); //target
+		//TLorentzVector p_gamma;
+		//TLorentzVector e_scattered;
+
+
+		e_beam_x = e_beam.X();
+		e_beam_y = e_beam.Y();
+		e_beam_z = e_beam.Z();
+		e_beam_E = e_beam.E();
 
 		for(int j(0); j < nParticles; ++j ) {
 
@@ -250,65 +269,88 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 			double xf = particle->GetXFeynman();
 			double px = particle->GetPx();
 			double py = particle->GetPy();
-			double pz = particle->GetPz();
+			double pz = particle->GetPz();	
 
-			TLorentzVector e_beam(0.,0.,pzlep,sqrt(pzlep*pzlep+MASS_ELECTRON*MASS_ELECTRON)); //initial electron
-			TLorentzVector p_beam(0.,0.,pztarg,sqrt(pztarg*pztarg+MASS_NUCLEON*MASS_NUCLEON)); //target
-
-			double e_beam_x = e_beam.X();
-			double e_beam_y = e_beam.Y();
-			double e_beam_z = e_beam.Z();
-			double e_beam_E = e_beam.E();
 
 			if (pdg==11 && status == 1){
 
-				TLorentzVector e_scattered(px,py,pz,sqrt(pz*pz+MASS_ELECTRON*MASS_ELECTRON));
+				//e_scattered(px,py,pz,sqrt(px*px+py*py+pz*pz+MASS_ELECTRON*MASS_ELECTRON));
+				e_scattered.SetPxPyPzE(px,py,pz,sqrt(px*px+py*py+pz*pz+MASS_ELECTRON*MASS_ELECTRON));
 
 				e_scattered_x = e_scattered.X();
 				e_scattered_y = e_scattered.Y();
 				e_scattered_z = e_scattered.Z();
 				e_scattered_E = e_scattered.E();
-				
+
+				counter_final_e++;				
 
 			}
-			TVector3 e_u= e_scattered.Vect().Unit();
+			
 			//cout << "px = "<<e_scattered_x << "py = "<<e_scattered_y << "pz = "<<e_scattered_z <<endl;
 			//Virtual photon
+			p_gamma = e_beam-e_scattered;
 
-			TLorentzVector p_gamma(e_beam_x-e_scattered_x, e_beam_y-e_scattered_y, e_beam_z-e_scattered_z, sqrt((e_beam_x-e_scattered_x)*(e_beam_x-e_scattered_x)));
 
-			p_gamma_x = p_gamma.X();
-			p_gamma_y = p_gamma.Y();
-			p_gamma_z = p_gamma.Z();
+			//TLorentzVector p_gamma(e_beam_x-e_scattered_x, e_beam_y-e_scattered_y, e_beam_z-e_scattered_z, sqrt((e_beam_z-e_scattered_z)*(e_beam_z-e_scattered_z)));
+
+			p_gamma_x = p_gamma.Px();
+			p_gamma_y = p_gamma.Py();
+			p_gamma_z = p_gamma.Pz();
 			p_gamma_E = p_gamma.E();
 
-			//Unit vectors
-			TVector3 uz = p_gamma.Vect().Unit();
-			//TVector3 ux = (e_beam.Vect().Cross(e_scattered.Vect())).Unit();
-
-			//Rotations
-			//ux.Rotate(3.*TMath::Pi()/2,uz);
-
-			
-			// p_cms = p*MASS_NUCLEON/Energy_cms;
-			// p_long_cms = p_cms*TMath::Cos(theta);	
-			// x_f_cms = 2*p_long_cms/TMath::Sqrt(trueW2);
-
-			// //y_cms_target=0.5*log(1+beta_target_cms/1-beta_target_cms);
-			// //cout << "y_cms_target" << y_cms_target << endl;
-			
-			// y_cms = rap - 3.453; 
-			// //cout << beta_target_cms<< endl;
-			// _y_cms= 0.5*log(Energy_cms+p_long_cms/Energy_cms-p_long_cms);
-
-
-			
-			
-			//do analysis track-by-track
-			
 			//particle cuts
-			if (status != 1) continue; //final state particles
-			//if (pt < 0.8) continue;
+			if (status != 1) continue; //final state particles	
+
+			p_final.SetPxPyPzE(px,py,pz,Energy);
+
+			pt_lab = sqrt(p_final.Px()*p_final.Px()+p_final.Py()*p_final.Py());
+			cout << "Before Rotation: " << endl;
+			p_final.Print();
+			
+			// cout << "vectors: " << endl; 
+			// e_beam.Print();
+			// e_scattered.Print();
+			// p_gamma.Print();
+			h_Energy->Fill(p_final.E());
+			h_pt->Fill(pt_lab);
+			h_pz->Fill(p_final.Pz());
+			h_mom->Fill(p_final.P());	
+
+			//Unit vectors & Rotation CMS Frame			
+
+			uz = p_gamma.Vect().Unit(); //uz.Print();
+			ux = (e_beam.Vect().Cross(e_scattered.Vect())).Unit(); //ux.Print();		
+			ux.Rotate(3.*TMath::Pi()/2,uz);			
+			TRotation rot;
+			rot.SetZAxis(uz,ux); //rot.Print();
+			
+			//do analysis track-by-track							
+			//we applied the rotation to the four-momentum of all final particles			
+			//p_final momemtum frame center of momemtum	
+
+			auto rotinv = rot.Invert();
+			p_final.Transform(rotinv);
+
+			cout << "After Rotation: " << endl;
+			p_final.Print();
+
+			//p_final_mag = sqrt(p_final.X()*p_final.X()+p_final.Y()*p_final.Y()+p_final.Z()*p_final.Z());
+			//p_final_mag = p_final.P();
+			//Energy_cms = p_final.E();
+			//pz_cms = p_final.Pz();
+			pt_cms = sqrt(p_final.Px()*p_final.Px()+p_final.Py()*p_final.Py());
+			
+			h_p_cms->Fill(p_final.P());
+			h_Energy_cms->Fill(p_final.E());
+			h_pz_cms->Fill(p_final.Pz());
+			h_pt_cms->Fill(pt_cms);
+						
+
+			//Rapidity in the new frame
+
+			//rap_cms = 0.5*log(p_final.E()-p_final.Z()/p_final.E()+p_final.Z());
+			//cout << rap_cms << endl
+
 			if (p > 0.2 && p < 0.8) //Grey Tracks
 			{
 				gt_counter++;
@@ -357,48 +399,28 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 
 			}			
 
-			//if (pdg != 2212 && pdg != 211 && pdg!=-211  && pdg!=321 && pdg!=-321 && pdg!=310 && pdg!= 331 && pdg!=1114 && pdg!=2214 ) continue;
-			
+			//if (pdg != 2212 && pdg != 211 && pdg!=-211  && pdg!=321 && pdg!=-321 && pdg!=310 && pdg!= 331 && pdg!=1114 && pdg!=2214 ) continue;		
 
 			counter_charged_particles = counter_p+counter_mesons;
 
-
+			//Fill histograms particle loop
 					
 			counter++;
 			counter_total_particles++;
-			h_Energy->Fill(Energy);
-			h_Energy_cms->Fill(Energy_cms);
-			h_p_cms->Fill(p_cms);
-			h_p_long_cms->Fill(p_long_cms);
-			h_x_f_cms->Fill(x_f_cms);
-			h_theta->Fill(theta);
-						
-			/*for (int i = 0; i < h_Energy->GetNbinsX(); ++i)
-			 {
-				 double binvalue = h_Energy->GetBinContent(i+1);
-				 double binwidth = h_Energy->GetBinWidth(i+1);
-
-				 h_Energy->SetBinContent (j+1, binvalue/binwidth);
-			 }*/ 
-																										
-			//Fill histograms particle loop
-
+			
+			h_theta->Fill(theta);	
 			h_pdg->Fill(pdg);
-			//h_Energy->Fill(Energy);
-			h_Status->Fill(status);
-			h_pt->Fill(pt);
+			h_Status->Fill(status);			
 			h_eta->Fill(eta);
 			h_phi->Fill(phi);
 			h_rapidity->Fill(rap);
-			h_mass->Fill(mass);
-			h_mom->Fill(p);
+			h_mass->Fill(mass);			
 			h_rap_eta->Fill(rap,eta,1);
 			h_mass_mom->Fill(p,mass,1);
 			h_mass_pt->Fill(pt,mass,1);
 			h_rap_gap->Fill(counter_p_gt,rap);
 			h_xf->Fill(xf);
-			h_y_cms->Fill(y_cms);
-			h__y_cms->Fill(_y_cms);
+						
 
 
 		} // end of particle loop
@@ -408,8 +430,8 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 		// prof->Fill(rap, counter_gt);
 		// hist->Fill(rap, counter_gt);
 
-		// }
-	
+		// // }
+		
 		
 		//fill histograms
 		h_nTracks->Fill(nParticles);
@@ -433,7 +455,13 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 
 		//cout << "e_beam" << e_beam[3] <<endl;
 		//cout << "nucleon_target" << p_beam[3] <<endl;
-		//cout << "Energy_cms: " << Energy_cms << endl;
+	//cout << "electrons: " <<counter_final_e << endl;
+	// cout << "electron scattered: "<<"px = " <<e_scattered.X() << "py = " <<e_scattered_y << "pz = " <<e_scattered_z <<endl;
+	// cout << "electron beam: " << "px = "<<e_beam_x << "py = "<<e_beam_y << "pz = "<<e_beam_z <<endl;
+	// cout << "gamma: " << "px = "<<p_gamma_x << "py = "<<p_gamma_y << "pz = "<<p_gamma_z <<endl;
+
+	// cout << "unitary vector rotation on x: " << "x axis: " <<ux.X() << "y axis: " <<ux.Y()  << "z axis: " <<ux.Z()<< endl;
+	// cout << "unitary vector rotation on z: " << "x axis: " <<uz.X() << "y axis: " <<uz.Y()  << "z axis: " <<uz.Z()<< endl;
 
 	}// end event loop
 
@@ -443,6 +471,30 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 
 	
 	//################################### Drawing for e - Xe #############################
+	TCanvas *f3 = new TCanvas("f3","f3");
+	f3->cd();
+	h_pt->SetTitle((title_collision+ "Pt  ; Pt ; nParticles").c_str());
+	h_pt_cms->SetLineColor(kRed);
+	h_pt->Draw();
+	h_pt_cms->Draw("same");
+	
+	TCanvas *f2 = new TCanvas("f2","f2");
+	f2->cd();
+	h_pz->SetTitle((title_collision+ "Pz  ; Pz  ; nParticles").c_str());
+	h_pz_cms->SetLineColor(kRed);
+	h_pz->Draw();
+	h_pz_cms->Draw("same");
+
+	TCanvas *f1 = new TCanvas("f1","f1");
+	f1->cd();
+	h_p_cms->SetLineColor(kRed);
+	h_mom->SetTitle((title_collision+ "Pz  ; Pz  ; nParticles").c_str());
+	h_mom->Draw();
+	h_p_cms->Draw("same");
+
+
+	
+
 	TCanvas *t15 = new TCanvas("t15","t15");
 	t15->Divide(2,1);
 	t15->cd(1);
@@ -537,22 +589,9 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 	h_rap_gap->SetTitle((title_collision+ " Grey Tracks Protons vs Rapidity ; y ; Grey Tracks").c_str());
 	h_rap_gap->SetMarkerStyle(kFullCircle);
 	h_rap_gap->Draw("P");
+		
+
 	
-	TCanvas *c2 = new TCanvas("c2","c2");
-	c2->cd();
-	h_Energy_cms->SetTitle((title_collision+ " Energy CMS; Energy CMS ;nParticles").c_str());
-	h_Energy_cms->Draw();
-
-	TCanvas *c3 = new TCanvas("c3","c3");
-	c3->cd();
-	//gPad->SetLogy();
-	h_p_cms->SetTitle((title_collision+ " Momentum CMS; p CMS ;nParticles").c_str());
-	h_p_cms->Draw();
-
-	TCanvas *c4 = new TCanvas("c4","c4");
-	c4->cd();
-	h_p_long_cms->SetTitle((title_collision+ " Longitudinal Momentum CMS; p longitudinal CMS ;nParticles").c_str());
-	h_p_long_cms->Draw();
 
 	TCanvas *c5 = new TCanvas("c5","c5");
 	c5->Divide(2,1);
@@ -561,10 +600,7 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 	h_xf->SetTitle((title_collision+ " Feynman - X BeAGLE; Xf;nParticles").c_str());
 	h_xf->Draw();
 
-	c5->cd(2);
-	h_x_f_cms->SetTitle((title_collision+ " Feynman - X ; Xf;nParticles").c_str());
-	h_x_f_cms->Draw();
-
+	
 	TCanvas *c6 = new TCanvas("c6","c6");
 	c6->cd();
 	h_theta->SetTitle((title_collision+ " THETA; THETA ;nParticles").c_str());
@@ -579,18 +615,7 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 	// h_rapidity->SetTitle((title_collision+ " Rapidity All stable and final particles; Rapidity ;nParticles").c_str());
 	// h_rapidity->Draw();
 
-	// t5->cd(2);
-	// h_y_cms->SetMarkerStyle(kStar);
-	// h_y_cms->SetTitle((title_collision+ " Rapidity All stable and final particles; Rapidity CMS ;nParticles").c_str());
-	// h_y_cms->Draw();
-
-	// t5->cd(3);
-	// h_y_cms->SetTitle((title_collision+ " Rapidity All stable and final particles; Rapidity CMS 2 ;nParticles").c_str());	
-	// h__y_cms->Draw();
-
-	// t5->cd(2);
-	// h_y_cms->SetTitle((title_collision+ " Rapidity CMS; Rapidity CMS ;nParticles").c_str());
-	// h_y_cms->Draw();
+	
 
 	TCanvas *t26 = new TCanvas("t26","t26");
 	t26->cd();
@@ -621,14 +646,19 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 	h_pdg->SetTitle((title_collision+ " PDG All particles; PDG;nParticles").c_str());
 	h_pdg->Draw();
 
+	TCanvas *t1 = new TCanvas("t1","t1");
+    t1->cd();
+	h_Energy_cms->SetLineColor(kRed);
+    h_Energy->SetTitle((title_collision+ " Energy All  particles;E(GeV) ;nParticles").c_str());
+	h_Energy->Draw();
+	h_Energy_cms->Draw("same");
+	
+;
+	
+
 	out->Write();
 
-	return;
-	
-
-	
-
-	
+	return;	
 
 	
 	TCanvas *t17 = new TCanvas("t17","t17");
@@ -648,16 +678,8 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 	t20->cd();
 	h_mass_pt->SetTitle((title_collision+ " All stable particles M vs Pt; Pt(GeV); Mass").c_str());
 	h_mass_pt->Draw();
-		
-	
-	TCanvas *t1 = new TCanvas("t1","t1");
-    t1->cd();
-	h_Energy->SetMarkerStyle(kFullCircle);
-    h_Energy->SetTitle((title_collision+ " Energy All  particles;E(GeV) ;nParticles").c_str());
-	h_Energy->Draw();
-	//t1->SaveAs("plots/Energy_charged_particles.png");
-	//h_Energy->SetTitle("e - Pb Energy pdg:2112; E(GeV);dE/dN (1/GeV)");
-	//h_Energy->Draw("PLC PMC");
+			
+
 
 	TCanvas *t2 = new TCanvas("t2","t2");
 	t2->cd();
