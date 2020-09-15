@@ -39,6 +39,7 @@
 #include "TBranchElement.h"
 #include "TProfile.h"
 
+
 #define PI            3.1415926
 
 #define MASS_MUON     0.1056
@@ -89,7 +90,7 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 	TH1F *h_pz = new TH1F("h_pz","h_pz", 100,-100, 100);
 	TH1F *h_eta = new TH1F("h_eta", "h_eta", 100, -10, 10);
 	TH1F *h_phi = new TH1F("h_phi", "h_phi", 100,-10, 10);
-	TH1F *h_rapidity = new TH1F("h_rapidity","h_rapidity", 100, -8, 4);
+	TH1F *h_rapidity = new TH1F("h_rapidity","h_rapidity", 100, -8, 5);
 	TH1F *h_mass = new TH1F("h_mass", "h_mass", 100, 0, 10);
 	TH1F *h_b = new TH1F("h_b", "h_b", 100, 0, 10);
 	TH1F *h_trueQ2 = new TH1F("h_trueQ2", "h_trueQ2", 100, 0, 20);
@@ -99,7 +100,7 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 	TH1F *h_pt_neutron = new TH1F("h_pt_neutron", "h_pt_neutron", 100, 0, 2);
 	TH1F *h_Energy_proton = new TH1F("h_Energy_proton", "h_Energy_proton", 100, 0, 3);
 	TH1F *h_Energy_proton_gt = new TH1F("h_Energy_proton_gt", "h_Energy_proton_gt", 100, 0, 3);
-	TH1F *h_xf = new TH1F("h_xf", "h_xf", 20, -4, 4);
+	TH1F *h_xf = new TH1F("h_xf", "h_xf", 40, -8, 8);
 	
 	TH1F *h_pt_proton = new TH1F("h_pt_proton", "h_pt_proton", 100, 0, 2);
 	TH1F *h_pt_proton_gt= new TH1F("h_pt_proton", "h_pt_proton", 100, 0, 2);
@@ -136,7 +137,11 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 	TH1F * h_Energy_cms = new TH1F("h_Energy_cms","h_Energy_cms", 100,0,6);
 	TH1F *h_pz_cms = new TH1F("h_pz_cms","h_pz_cms",100, -100,100);
 	TH1F *h_pt_cms = new TH1F("h_pt_cms","h_pt_cms",100, 0,2);
+	TH1F *h_rap_cms = new TH1F("h_rap_cms","h_rap_cms",100,-2,2);
+	TH1F *h_xf_cms = new TH1F("h_xf_cms","h_xf_cms",40,-8,8);
 
+	TH1F *h_xf_2 = new TH1F("h_xf_2","h_xf_2",40,-8,8);
+    TH1F *h_rap_lab = new TH1F("h_rap_lab","h_rap_lab", 100,-2,2);
 
 	
 	TProfile *prof = new TProfile("prof", "Rapidity;<ng>", 21, -7, 3);
@@ -152,8 +157,11 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 	TLorentzVector p_gamma;
 	TLorentzVector p_final;
 	TLorentzVector p_beam;
-
-	double rap_cms;
+	TLorentzVector p_gamma_beagle;
+	double Beta;
+	double rap_lab = 0;
+	double rap_cms = 0;
+	double xf_cms = 0;
 
 	for(int i(0); i < nEvents; ++i ) {
       
@@ -235,6 +243,7 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 				
 		double pt_cms = 0;
 		double pt_lab = 0;
+		double xf_2 = 0;
 
 		TVector3 ux;
 		TVector3 uz;
@@ -285,11 +294,20 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 				counter_final_e++;				
 
 			}
+
+			if (pdg==22 && status == 21){
+
+				p_gamma_beagle.SetPxPyPzE(px,py,pz, sqrt(px*px+py*py+pz*pz+trueQ2)); //virtual photon
+
+			}
+
+				
+
+			
 			
 			//cout << "px = "<<e_scattered_x << "py = "<<e_scattered_y << "pz = "<<e_scattered_z <<endl;
 			//Virtual photon
 			p_gamma = e_beam-e_scattered;
-
 
 			//TLorentzVector p_gamma(e_beam_x-e_scattered_x, e_beam_y-e_scattered_y, e_beam_z-e_scattered_z, sqrt((e_beam_z-e_scattered_z)*(e_beam_z-e_scattered_z)));
 
@@ -304,17 +322,41 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 			p_final.SetPxPyPzE(px,py,pz,Energy);
 
 			pt_lab = sqrt(p_final.Px()*p_final.Px()+p_final.Py()*p_final.Py());
-			cout << "Before Rotation: " << endl;
-			p_final.Print();
+
+			Beta = p_final.Mag()/p_final.E();
+
 			
+
+			if (pdg==2112 & status==1)
+			{
+
+				xf_2 = 2*p_final.Pz()/sqrt(trueW2);
+				rap_lab = rap;
+				
+			}
+
+			h_rap_lab->Fill(rap_lab);
+
+			cout << "Before Rotation: " << endl;
+			//p_final.Print();			
 			// cout << "vectors: " << endl; 
 			// e_beam.Print();
 			// e_scattered.Print();
-			// p_gamma.Print();
+			cout << "virtual photon momemtum: " << endl;
+			
+			p_gamma.Print();
+			p_gamma_beagle.Print();
+			cout << "target beam: ";
+			p_beam.Print();
+
 			h_Energy->Fill(p_final.E());
 			h_pt->Fill(pt_lab);
 			h_pz->Fill(p_final.Pz());
-			h_mom->Fill(p_final.P());	
+			h_mom->Fill(p_final.P());
+			h_xf_2->Fill(xf_2);
+
+
+
 
 			//Unit vectors & Rotation CMS Frame			
 
@@ -330,15 +372,29 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 
 			auto rotinv = rot.Invert();
 			p_final.Transform(rotinv);
+			p_gamma.Transform(rotinv);
+			p_beam.Transform(rotinv);
 
-			cout << "After Rotation: " << endl;
-			p_final.Print();
+			//cout << "After Rotation: " << endl;
 
+			//p_final.Print();	
+			p_final.Boost(0,0,-Beta);
+			p_gamma.Boost(0,0,-Beta);
+			p_beam.Boost(0,0,-Beta);
+
+			cout << "After Rotation: "<< endl;
+			cout << "virtual photon momemtum: " ;
+			p_gamma.Print();
+			cout << "target beam: ";
+			p_beam.Print();
+
+			//cout << "After Boost: " << endl;
+			//p_final.Print();
 			//p_final_mag = sqrt(p_final.X()*p_final.X()+p_final.Y()*p_final.Y()+p_final.Z()*p_final.Z());
 			//p_final_mag = p_final.P();
 			//Energy_cms = p_final.E();
 			//pz_cms = p_final.Pz();
-			pt_cms = sqrt(p_final.Px()*p_final.Px()+p_final.Py()*p_final.Py());
+			pt_cms = sqrt(p_final.Px()*p_final.Px()+p_final.Py()*p_final.Py());//***
 			
 			h_p_cms->Fill(p_final.P());
 			h_Energy_cms->Fill(p_final.E());
@@ -348,7 +404,17 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 
 			//Rapidity in the new frame
 
-			//rap_cms = 0.5*log(p_final.E()-p_final.Z()/p_final.E()+p_final.Z());
+			
+
+			if (pdg==2112 & status==1)
+			{
+				xf_cms = 2*p_final.Pz()/sqrt(trueW2);
+				rap_cms = 0.5*log(p_final.E()-p_final.Z()/p_final.E()+p_final.Z());
+			}
+			
+
+			h_rap_cms->Fill(rap_cms);
+			h_xf_cms->Fill(xf_cms);
 			//cout << rap_cms << endl
 
 			if (p > 0.2 && p < 0.8) //Grey Tracks
@@ -474,9 +540,19 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 	TCanvas *f3 = new TCanvas("f3","f3");
 	f3->cd();
 	h_pt->SetTitle((title_collision+ "Pt  ; Pt ; nParticles").c_str());
-	h_pt_cms->SetLineColor(kRed);
+	h_pt_cms->SetLineColor(kRed);	
 	h_pt->Draw();
 	h_pt_cms->Draw("same");
+	TLegend *leg = new TLegend(0.35, 0.75, 0.4, 0.9);
+    leg->SetBorderSize(0); // no border
+    leg->SetFillStyle(0);
+    leg->SetFillColor(0); // Legend background should be white
+    leg->SetTextFont(32);
+    leg->SetTextSize(0.04); // Increase entry font size!
+    leg->AddEntry(h_pt, "P_{t} Lab Frame", "l");
+    leg->AddEntry(h_pt_cms, "P_{t} Momemtum Frame", "l");
+    leg->Draw();
+	
 	
 	TCanvas *f2 = new TCanvas("f2","f2");
 	f2->cd();
@@ -484,13 +560,31 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 	h_pz_cms->SetLineColor(kRed);
 	h_pz->Draw();
 	h_pz_cms->Draw("same");
+	TLegend *l4 = new TLegend(0.2, 0.75, 0.25, 0.9);
+    l4->SetBorderSize(0); // no border
+    l4->SetFillStyle(0);
+    l4->SetFillColor(0); // Legend background should be white
+    l4->SetTextFont(32);
+    l4->SetTextSize(0.04); // Increase entry font size!
+    l4->AddEntry(h_pz, "P_{z} Lab Frame", "l");
+    l4->AddEntry(h_pz_cms, "P_{z} Momemtum Frame", "l");
+    l4->Draw();
 
 	TCanvas *f1 = new TCanvas("f1","f1");
 	f1->cd();
 	h_p_cms->SetLineColor(kRed);
-	h_mom->SetTitle((title_collision+ "Pz  ; Pz  ; nParticles").c_str());
+	h_mom->SetTitle((title_collision+ "P  ; P  ; nParticles").c_str());
 	h_mom->Draw();
 	h_p_cms->Draw("same");
+	TLegend *l = new TLegend(0.35, 0.75, 0.4, 0.92);
+    l->SetBorderSize(0); // no border
+    l->SetFillStyle(0);
+    l->SetFillColor(0); // Legend background should be white
+    l->SetTextFont(32);
+    l->SetTextSize(0.04); // Increase entry font size!
+    l->AddEntry(h_mom, "P Lab Frame", "l");
+    l->AddEntry(h_p_cms, "P Momemtum Frame", "l");
+    l->Draw();
 
 
 	
@@ -594,11 +688,26 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 	
 
 	TCanvas *c5 = new TCanvas("c5","c5");
-	c5->Divide(2,1);
-	c5->cd(1);
+	c5->cd();
 	//gPad->SetLogy();
-	h_xf->SetTitle((title_collision+ " Feynman - X BeAGLE; Xf;nParticles").c_str());
-	h_xf->Draw();
+	h_xf_2->SetTitle((title_collision+ " Feynman - X protons; X_{f};nParticles").c_str());
+	h_xf_2->Draw();
+	//h_xf_cms->SetTitle((title_collision+ " Feynman - X CMS; Xf;nParticles").c_str());
+	h_xf_cms->SetLineColor(kRed);
+	h_xf_2->SetLineColor(kBlue);
+	h_xf_cms->Draw("same");
+	h_xf->Draw("same");
+	TLegend *l5 = new TLegend(0.15, 0.75, 0.2, 0.92);
+    l5->SetBorderSize(0); // no border
+    l5->SetFillStyle(0);
+    l5->SetFillColor(0); // Legend background should be white
+    l5->SetTextFont(32);
+    l5->SetTextSize(0.035); // Increase entry font size!
+    l5->AddEntry(h_xf, "X_{f} Lab Frame BeAGLE", "l");
+    l5->AddEntry(h_xf_2,"X_{f} formula Lab Frame", "l");
+    l5->AddEntry(h_xf_cms, "X_{f} Momemtum Frame", "l");
+    l5->Draw();	
+
 
 	
 	TCanvas *c6 = new TCanvas("c6","c6");
@@ -609,11 +718,21 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 	
 	//-------------------------------------- All stable Particles ----------------------------------------------
 
-	// TCanvas *t5 = new TCanvas("t5","t5");
-	// t5->Divide(2,1);
-	// t5->cd(1);
-	// h_rapidity->SetTitle((title_collision+ " Rapidity All stable and final particles; Rapidity ;nParticles").c_str());
-	// h_rapidity->Draw();
+	TCanvas *t5 = new TCanvas("t5","t5");
+	t5->cd();
+	h_rap_cms->SetTitle((title_collision+ " Rapidity All stable and final particles; Rapidity ;nParticles").c_str());	
+	h_rap_cms->SetLineColor(kRed);
+	h_rap_cms->Draw();
+	h_rap_lab->Draw("same");
+	TLegend *l1 = new TLegend(0.2, 0.75, 0.25, 0.92);
+    l1->SetBorderSize(0); // no border
+    l1->SetFillStyle(0);
+    l1->SetFillColor(0); // Legend background should be white
+    l1->SetTextFont(32);
+    l1->SetTextSize(0.035); // Increase entry font size!
+    l1->AddEntry(h_rap_lab, "Rapidity Lab Frame", "l");
+    l1->AddEntry(h_rap_cms, "Rapidity Momemtum Frame", "l");
+    l1->Draw();	
 
 	
 
@@ -649,9 +768,18 @@ void runEICTree(const TString filename="/Users/carorg/projects/eic/eic-centralit
 	TCanvas *t1 = new TCanvas("t1","t1");
     t1->cd();
 	h_Energy_cms->SetLineColor(kRed);
-    h_Energy->SetTitle((title_collision+ " Energy All  particles;E(GeV) ;nParticles").c_str());
+    h_Energy->SetTitle((title_collision+ " Energy All  particles;E(GeV) ;nParticles").c_str());    
 	h_Energy->Draw();
 	h_Energy_cms->Draw("same");
+	TLegend *l2 = new TLegend(0.35, 0.75, 0.4, 0.92);
+    l2->SetBorderSize(0); // no border
+    l2->SetFillStyle(0);
+    l2->SetFillColor(0); // Legend background should be white
+    l2->SetTextFont(32);
+    l2->SetTextSize(0.04); // Increase entry font size!
+    l2->AddEntry(h_Energy, "Energy Lab Frame", "l");
+    l2->AddEntry(h_Energy_cms, "Energy Momemtum Frame", "l");
+    l2->Draw();
 	
 ;
 	
